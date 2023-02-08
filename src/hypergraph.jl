@@ -564,6 +564,54 @@ function _incidence_to_adjacency(M; s::Int=1, weighted::Bool=true)
     A
 end
 
+"""
+    _check_cover_existance(h::Hypergraph)
+    
+Helper function to determine if it is possible to find a cover.
+
+"""
+function _check_cover_existance(h::Hypergraph)
+    h1 = deepcopy(h)
+    for idx in reverse(1:nhv(h1))
+        length(h1.v2he[idx]) == 0 && remove_vertex!(h1,idx)
+    end
+    return h == h1
+end
+
+"""
+    greedy_set_cover(h::Hypergraph)
+	
+A simple greedy algorithm to find a hypergraph cover. The list C contains the indices of the hyperedges of the cover.
+
+"""
+function greedy_set_cover(h::Hypergraph)
+    U = Int64[idx for idx in 1:nhv(h)] #all vertices indexes
+    V = Int64[idx for idx in 1:nhe(h)] #all hyperedges indexes
+    C = Int64[]
+    
+    !_check_cover_existance(h) && return C
+
+    while length(U) > 0
+        max_count = chosen_idx = 0
+        for he_index in V
+            he_vertices = getvertices(h, he_index)
+            count = 0
+            for vertex in keys(he_vertices)
+                (vertex in U) && (count += 1)
+            end
+            (count > max_count) && (max_count = count; chosen_idx = he_index)
+        end
+        push!(C, chosen_idx)
+        for vertex in keys(getvertices(h, chosen_idx))
+            idx = findfirst(isequal(vertex), U)
+            typeof(idx) == Int64 && deleteat!(U, idx)
+        end
+        deleteat!(V, findfirst(isequal(chosen_idx), V))
+    end
+    
+    return C
+end
+
 
 # TODO find connected components without recurrence
 # TODO needs validate_hypergraph!(h::Hypergraph{T})
