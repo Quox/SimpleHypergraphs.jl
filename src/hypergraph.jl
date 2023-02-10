@@ -612,6 +612,44 @@ function greedy_set_cover(h::Hypergraph)
     return C
 end
 
+"""
+    get_spanning_hypertree(h::Hypergraph)
+
+Function that finds a spanning hypertree of a hypergraph using algorithm from [1] taking into account hyperedges weights.
+
+[1] G.H. Shirdel and B. Vaez-Zadeh, Finding a minimal spanning hypertree of a weighted hypergraph, 2022
+
+"""
+function get_spanning_hypertree(h::Hypergraph)
+    U = Int64[idx for idx in 1:nhv(h)] #all vertices indexes
+    V = Int64[idx for idx in 1:nhe(h)] #all hyperedges indexes
+    C = Int64[]
+    
+    !_check_cover_existance(h) && return C
+
+    while length(U) > 0
+        min_weight = Inf
+        chosen_idx = 0
+        for he_index in V
+            he_vertices = getvertices(h, he_index)
+            count = 0
+            weight = 0
+            for vertex in keys(he_vertices)
+                (vertex in U) && (count += 1; weight += h.v2he[vertex][he_index])
+            end        
+            (count > 1 & weight < min_weight) && (min_weight = weight; chosen_idx = he_index)
+        end
+        push!(C, chosen_idx)
+        for vertex in keys(getvertices(h, chosen_idx))
+            idx = findfirst(isequal(vertex), U)
+            typeof(idx) == Int64 && deleteat!(U, idx)
+        end
+        deleteat!(V, findfirst(isequal(chosen_idx), V))
+    end
+    
+    return C
+end
+
 
 # TODO find connected components without recurrence
 # TODO needs validate_hypergraph!(h::Hypergraph{T})
