@@ -637,7 +637,7 @@ function get_spanning_hypertree(h::Hypergraph)
             for vertex in keys(he_vertices)
                 (vertex in U) && (count += 1; weight += h.v2he[vertex][he_index])
             end        
-            (count > 1 & weight < min_weight) && (min_weight = weight; chosen_idx = he_index)
+            (count > 0 & weight < min_weight) && (min_weight = weight; chosen_idx = he_index)
         end
         push!(C, chosen_idx)
         for vertex in keys(getvertices(h, chosen_idx))
